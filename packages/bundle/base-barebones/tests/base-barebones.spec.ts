@@ -21,8 +21,10 @@ describe('dsh-base-barebones bundle', () => {
     }
     expect(manifest.dsh?.bundle?.patch).toBe('./cordis.patch.yml')
     expect(manifest.dependencies).toEqual({ '@deepseek-ai/dsh-base': 'workspace:^' })
+    const patchPath = manifest.dsh?.bundle?.patch
+    if (patchPath === undefined) throw new Error('bundle patch manifest field is required')
     const parsed = yaml.load(
-      readFileSync(resolve(root, manifest.dsh.bundle.patch), 'utf8'),
+      readFileSync(resolve(root, patchPath), 'utf8'),
       { schema: entryListSchema },
     )
     expect(Array.isArray(parsed)).toBe(true)
