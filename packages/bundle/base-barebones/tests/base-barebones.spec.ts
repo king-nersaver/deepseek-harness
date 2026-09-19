@@ -9,29 +9,19 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import * as yaml from 'js-yaml'
 import { entryListSchema } from '@deepseek-ai/cordis-plugin-include'
+import { composeEntries } from '@deepseek-ai/dsh-app-boot'
 
-
-function bundleRows(root: string, relativePath: string): { id?: string; disabled?: boolean; config?: Record<string, unknown> }[] {
+function bundlePatches(root: string, relativePath: string): Record<string, unknown>[] {
   const parsed = yaml.load(readFileSync(resolve(root, relativePath), 'utf8'), { schema: entryListSchema })
   if (!Array.isArray(parsed)) throw new TypeError(`${relativePath} must parse to a patch list`)
-  return parsed.flatMap(entry => {
-    if (typeof entry !== 'object' || entry === null) return []
+  return parsed as Record<string, unknown>[]
+}
+
+function bundleRows(root: string, relativePath: string): { id?: string; disabled?: boolean; config?: Record<string, unknown> }[] {
+  return bundlePatches(root, relativePath).flatMap(entry => {
     if ('insert' in entry) return (entry as { insert?: { id?: string; disabled?: boolean; config?: Record<string, unknown> }[] }).insert ?? []
     return [entry as { id?: string; disabled?: boolean; config?: Record<string, unknown> }]
   })
-}
-
-function composeRows(
-  baseRows: readonly { id?: string; disabled?: boolean; config?: Record<string, unknown> }[],
-  overlayRows: readonly { id?: string; disabled?: boolean; config?: Record<string, unknown> }[],
-): { id?: string; disabled?: boolean; config?: Record<string, unknown> }[] {
-  const rows = [...baseRows]
-  for (const overlayRow of overlayRows) {
-    const index = rows.findIndex(baseRow => baseRow.id === overlayRow.id)
-    if (index >= 0) rows[index] = { ...rows[index], ...overlayRow }
-    else rows.push(overlayRow)
-  }
-  return rows
 }
 
 describe('dsh-base-barebones bundle', () => {
@@ -84,10 +74,10 @@ describe('dsh-base-barebones bundle', () => {
 
   it('overrides the composed base rows into a no-default-model, fetch-only profile surface', () => {
     const root = fileURLToPath(new URL('..', import.meta.url))
-    const composedRows = composeRows(
-      bundleRows(root, '../base/cordis.patch.yml'),
-      bundleRows(root, 'cordis.patch.yml'),
-    )
+    const composedRows = composeEntries([
+      bundlePatches(root, '../base/cordis.patch.yml'),
+      bundlePatches(root, 'cordis.patch.yml'),
+    ] as Parameters<typeof composeEntries>[0])
     expect(composedRows.find(row => row.id === 'llm-deepseek')?.disabled).toBe(true)
     expect(composedRows.find(row => row.id === 'session-title-llm')?.disabled).toBe(true)
     expect(composedRows.find(row => row.id === 'agent-default-model')?.config).toEqual({
