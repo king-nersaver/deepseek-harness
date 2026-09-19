@@ -78,8 +78,12 @@ describe('dsh-base-barebones bundle', () => {
       bundlePatches(root, '../base/cordis.patch.yml'),
       bundlePatches(root, 'cordis.patch.yml'),
     ] as Parameters<typeof composeEntries>[0])
-    expect(composedRows.find(row => row.id === 'llm-deepseek')?.disabled).toBe(true)
+    expect(composedRows.find(row => row.id === 'session-log-deepseek')?.disabled).toBe(true)
+    expect(composedRows.find(row => row.id === 'plugin-package-inventory-deepseek')?.disabled).toBe(true)
     expect(composedRows.find(row => row.id === 'session-title-llm')?.disabled).toBe(true)
+    expect(composedRows.find(row => row.id === 'session-telemetry-otel')?.disabled).toBe(true)
+    expect(composedRows.find(row => row.id === 'llm-deepseek')?.disabled).toBe(true)
+    expect(composedRows.find(row => row.id === 'web-search-deepseek')?.disabled).toBe(true)
     expect(composedRows.find(row => row.id === 'agent-default-model')?.config).toEqual({
       provider: 'configure-provider',
       model: 'configure-model',
