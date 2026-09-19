@@ -10,6 +10,30 @@ import { describe, expect, it } from 'vitest'
 import * as yaml from 'js-yaml'
 import { entryListSchema } from '@deepseek-ai/cordis-plugin-include'
 
+
+function bundleRows(root: string, relativePath: string): { id?: string; disabled?: boolean; config?: Record<string, unknown> }[] {
+  const parsed = yaml.load(readFileSync(resolve(root, relativePath), 'utf8'), { schema: entryListSchema })
+  if (!Array.isArray(parsed)) throw new TypeError(`${relativePath} must parse to a patch list`)
+  return parsed.flatMap(entry => {
+    if (typeof entry !== 'object' || entry === null) return []
+    if ('insert' in entry) return (entry as { insert?: { id?: string; disabled?: boolean; config?: Record<string, unknown> }[] }).insert ?? []
+    return [entry as { id?: string; disabled?: boolean; config?: Record<string, unknown> }]
+  })
+}
+
+function composeRows(
+  baseRows: readonly { id?: string; disabled?: boolean; config?: Record<string, unknown> }[],
+  overlayRows: readonly { id?: string; disabled?: boolean; config?: Record<string, unknown> }[],
+): { id?: string; disabled?: boolean; config?: Record<string, unknown> }[] {
+  const rows = [...baseRows]
+  for (const overlayRow of overlayRows) {
+    const index = rows.findIndex(baseRow => baseRow.id === overlayRow.id)
+    if (index >= 0) rows[index] = { ...rows[index], ...overlayRow }
+    else rows.push(overlayRow)
+  }
+  return rows
+}
+
 describe('dsh-base-barebones bundle', () => {
   it('declares a parseable patch list that disables bundled DeepSeek egress defaults', () => {
     const root = fileURLToPath(new URL('..', import.meta.url))
@@ -57,4 +81,21 @@ describe('dsh-base-barebones bundle', () => {
     expect(rows.find(row => row.id === 'web')?.config).toEqual({ fetchProvider: 'http' })
     expect(rows.find(row => row.id === 'tool-web')?.config).toEqual({ search: false, fetch: true })
   })
+
+  it('overrides the composed base rows into a no-default-model, fetch-only profile surface', () => {
+    const root = fileURLToPath(new URL('..', import.meta.url))
+    const composedRows = composeRows(
+      bundleRows(root, '../base/cordis.patch.yml'),
+      bundleRows(root, 'cordis.patch.yml'),
+    )
+    expect(composedRows.find(row => row.id === 'llm-deepseek')?.disabled).toBe(true)
+    expect(composedRows.find(row => row.id === 'session-title-llm')?.disabled).toBe(true)
+    expect(composedRows.find(row => row.id === 'agent-default-model')?.config).toEqual({
+      provider: 'configure-provider',
+      model: 'configure-model',
+    })
+    expect(composedRows.find(row => row.id === 'web')?.config).toEqual({ fetchProvider: 'http' })
+    expect(composedRows.find(row => row.id === 'tool-web')?.config).toEqual({ search: false, fetch: true })
+  })
+
 })
