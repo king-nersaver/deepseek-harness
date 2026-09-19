@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This group maps the installable patch layers used by `dsh --profile`. Each package declares `dsh.bundle.patch`; the launcher stacks those patch documents to assemble a named profile. The `web`, `headless`, `acp`, and `sdk` profiles build on `dsh-base`, while `sdk-minimal` supplies its complete tree in one bundle. Domain packages can declare additional layers outside this directory.
+This group maps the installable patch layers used by `dsh --profile`. Each package declares `dsh.bundle.patch`; the launcher stacks those patch documents to assemble a named profile. The `web`, `headless`, `acp`, and `sdk` profiles build on `dsh-base`, `base-barebones` is an opt-in low-egress overlay over that core, and `sdk-minimal` supplies its complete tree in one bundle. Domain packages can declare additional layers outside this directory.
 
 ## Table of Contents
 
@@ -23,6 +23,7 @@ This group maps the installable patch layers used by `dsh --profile`. Each packa
 | Package | Role | ctx key |
 |---|---|---|
 | [`base`](base/README.md) | Shared core for base-backed profiles | — (patch only) |
+| [`base-barebones`](base-barebones/README.md) | Opt-in low-egress overlay over base | — (patch only) |
 | [`acp-app`](acp-app/README.md) | Automation-only ACP stdio application over base | mounts the ACP bridge |
 | [`web-app`](web-app/README.md) | Browser application layer over base | mounts Web rows |
 | [`headless`](headless/README.md) | One-shot command-line task application over base | `headless-runner` |
