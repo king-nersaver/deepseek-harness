@@ -1885,6 +1885,19 @@ importers:
         specifier: workspace:^
         version: link:../../../vendor/cordis
 
+  packages/bundle/base-barebones:
+    dependencies:
+      '@deepseek-ai/dsh-base':
+        specifier: workspace:^
+        version: link:../base
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-app-boot':
+        specifier: workspace:^
+        version: link:../../boot/app-boot
+
   packages/bundle/headless:
     dependencies:
       '@deepseek-ai/dsh-brand':

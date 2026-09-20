@@ -1,0 +1,34 @@
+# Optional low-egress overlay for profiles that already mount dsh-base. Later
+# user patches can re-enable any row explicitly.
+
+- id: session-log-deepseek
+  disabled: true
+
+- id: plugin-package-inventory-deepseek
+  disabled: true
+
+- id: session-title-llm
+  disabled: true
+
+- id: session-telemetry-otel
+  disabled: true
+
+- id: llm-deepseek
+  disabled: true
+
+- id: agent-default-model
+  config:
+    provider: configure-provider
+    model: configure-model
+
+- id: web
+  config:
+    fetchProvider: http
+
+- id: web-search-deepseek
+  disabled: true
+
+- id: tool-web
+  config:
+    search: false
+    fetch: true
